@@ -1,0 +1,92 @@
+.billing-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #eef4fb 0%, #f7fbff 100%);
+  padding: 40px 24px;
+  font-family: 'Arial', sans-serif;
+}
+
+.billing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.billing-page h1 {
+  color: #2c3e50;
+  font-size: 32px;
+  text-align: center;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.billing-intro {
+  max-width: 680px;
+  color: #4f5b67;
+  margin-bottom: 24px;
+}
+
+.back-btn,
+.billing-button {
+  background: #3b82f6;
+  border: none;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.back-btn:hover,
+.billing-button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.product-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 12px 24px rgba(45, 65, 110, 0.08);
+  padding: 22px;
+  min-height: 180px;
+}
+
+.product-card h2 {
+  margin-top: 0;
+  font-size: 20px;
+  color: #1f2937;
+}
+
+.product-card p {
+  color: #556173;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 12px 0 18px;
+}
+
+.product-meta {
+  display: flex;
+  justify-content: space-between;
+  color: #111827;
+  font-weight: 600;
+}
+
+.billing-status,
+.billing-error {
+  color: #334155;
+  margin-bottom: 18px;
+}
+
+.billing-error {
+  color: #b91c1c;
+}
