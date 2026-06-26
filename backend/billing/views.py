@@ -2,6 +2,7 @@ import json
 from decimal import Decimal
 
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
@@ -33,6 +34,10 @@ def _invoice_data(invoice):
             for item in invoice.items.all()
         ],
     }
+
+
+def billing_page(request):
+    return render(request, 'billing/billing_page.html')
 
 
 @require_GET

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Billing</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .product-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+        .product-card { border: 1px solid #ccc; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; }
+        .product-card h3 { margin: 0 0 8px; }
+        .product-card p { margin: 4px 0; flex: 1; }
+        .product-card button { margin-top: 12px; padding: 10px 14px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .product-card button:hover { background: #0056b3; }
+        .summary { margin-top: 32px; border: 1px solid #ccc; border-radius: 8px; padding: 16px; max-width: 800px; }
+        .summary h2 { margin-top: 0; }
+        .summary table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .summary table th, .summary table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .summary button { margin-top: 16px; padding: 10px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .summary button:hover { background: #218838; }
+        .message { margin-top: 12px; color: red; }
+    </style>
+</head>
+<body>
+    <h1>Products</h1>
+    <div id="products" class="product-grid"></div>
+
+    <div class="summary">
+        <h2>Invoice Summary</h2>
+        <div>Total: <strong id="totalValue">0.00</strong></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Line Total</th>
+                </tr>
+            </thead>
+            <tbody id="invoiceItems"></tbody>
+        </table>
+        <button id="purchaseBtn">Purchase</button>
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+        const productsContainer = document.getElementById('products');
+        const invoiceItemsBody = document.getElementById('invoiceItems');
+        const totalValue = document.getElementById('totalValue');
+        const messageEl = document.getElementById('message');
+        const purchaseBtn = document.getElementById('purchaseBtn');
+        const invoice = {};
+
+        function formatCurrency(value) {
+            return parseFloat(value).toFixed(2);
+        }
+
+        function renderProducts(products) {
+            productsContainer.innerHTML = '';
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <h3>${product.name}</h3>
+                    <p>${product.description}</p>
+                    <p>Price: $${formatCurrency(product.price)}</p>
+                    <button data-product-id="${product.id}">Add</button>
+                `;
+
+                const button = card.querySelector('button');
+                button.addEventListener('click', () => addProduct(product));
+                productsContainer.appendChild(card);
+            });
+        }
+
+        function renderInvoice() {
+            invoiceItemsBody.innerHTML = '';
+            let total = 0;
+
+            Object.values(invoice).forEach(item => {
+                const lineTotal = item.quantity * parseFloat(item.price);
+                total += lineTotal;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>$${formatCurrency(item.price)}</td>
+                    <td>$${formatCurrency(lineTotal)}</td>
+                `;
+                invoiceItemsBody.appendChild(row);
+            });
+
+            totalValue.textContent = formatCurrency(total);
+        }
+
+        function addProduct(product) {
+            messageEl.textContent = '';
+            const item = invoice[product.id];
+            if (item) {
+                item.quantity += 1;
+            } else {
+                invoice[product.id] = {
+                    product_id: product.id,
+                    name: product.name,
+                    quantity: 1,
+                    price: product.price,
+                };
+            }
+            renderInvoice();
+        }
+
+        purchaseBtn.addEventListener('click', async () => {
+            messageEl.textContent = '';
+            const items = Object.values(invoice).map(item => ({ product_id: item.product_id, quantity: item.quantity }));
+            if (items.length === 0) {
+                messageEl.textContent = 'Add at least one product before purchasing.';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/billing/invoice/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items }),
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    messageEl.textContent = data.error || 'Purchase failed.';
+                    return;
+                }
+
+                if (data.success) {
+                    messageEl.textContent = 'Invoice created successfully: ID ' + data.invoice.id;
+                    Object.keys(invoice).forEach(key => delete invoice[key]);
+                    renderInvoice();
+                }
+            } catch (error) {
+                messageEl.textContent = 'Network error while creating invoice.';
+            }
+        });
+
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/billing/products/');
+                const data = await response.json();
+                renderProducts(data.products);
+            } catch (error) {
+                productsContainer.innerHTML = '<p>Unable to load products.</p>';
+            }
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>
